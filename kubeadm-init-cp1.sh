@@ -29,16 +29,16 @@ multipass shell $VM_NAME <<'EOF'
   sudo systemctl restart containerd
   sudo mkdir -p /etc/containerd
   containerd config default | sudo tee /etc/containerd/config.toml
-
   
   echo "Running kubeadm init for CP1. Initiating Calico CNI..."
-  sudo kubeadm init --kubernetes-version=${K8S_VERSION} --image-repository registry.k8s.io --pod-network-cidr=${POD_CIDR} --cri-socket=unix:///var/run/containerd/containerd.sock
+  sudo kubeadm init --kubernetes-version=${K8S_VERSION} --image-repository registry.k8s.io --pod-network-cidr=${POD_CIDR}
 
   echo "Setting up kubeconfig for current user..."
   mkdir -p $HOME/.kube
   sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
   sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-  echo "✅ Init complete. Control plane and Calico-ready networking are now live."
+  echo "✅ Init complete. Control plane and Calico-ready networking are now live. "
+  
 EOF
 

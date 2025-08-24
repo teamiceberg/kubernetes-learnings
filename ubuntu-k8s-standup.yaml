@@ -6,19 +6,39 @@ package_upgrade: true
 
 #install packages. do not install docker. use containerd.
 packages:
-  - apt-transport-https     # Enables HTTPS for APT
-  - ca-certificates         # Validates SSL certs
-  - curl                    # Fetches binaries and configs
-  - gnupg                   # Handles GPG keys for repo signing
-  - lsb-release             # Detects distro info
-  - software-properties-common  # Adds external repos
-  - containerd              # Container runtime (preferred over Docker)
-  - socat                   # Required for kube-proxy and port forwarding
-  - conntrack               # Tracks network connections (used by kube-proxy)
-  - iptables                # Ensures firewall compatibility
-  - ebtables                # Handles Ethernet bridging (CNI support)
-  - ethtool                 # Diagnoses NIC behavior
-  - net-tools               # Legacy but useful for `ifconfig`, `netstat`
+  # Base system and Kubernetes prerequisites
+  - apt-transport-https           # Enables HTTPS for APT repositories
+  - ca-certificates               # Validates SSL certificates
+  - curl                          # Fetches binaries and configs
+  - gnupg                         # Handles GPG keys for repo signing
+  - lsb-release                   # Detects distro info for conditional logic
+  - software-properties-common    # Adds external repositories
+  - containerd                    # Container runtime (preferred over Docker)
+  - socat                         # Required for kube-proxy and port forwarding
+  - conntrack                     # Tracks network connections (used by kube-proxy)
+  - iptables                      # Ensures firewall compatibility
+  - ebtables                      # Handles Ethernet bridging (CNI support)
+  - ethtool                       # Diagnoses NIC behavior and link status
+  - net-tools                     # Legacy but useful for `ifconfig`, `netstat`
+  - neovim                        # For clarity annotation and YAML editing
+  - systemd                       # Ensures journalctl and service management
+
+  # Diagnostic and Monitoring Suite
+  - htop                          # Interactive process viewer for CPU/memory load
+  - lsof                          # Lists open files and ports (bind visibility)
+  - strace                        # Syscall-level tracing for container startup failures
+  - tcpdump                       # Packet inspection for control plane probes and TLS
+  - iftop                         # Real-time network usage by interface
+  - nethogs                       # Per-process bandwidth monitoring
+  - iproute2                      # Modern IP, SS, TC tools for socket and route inspection
+  - nmap                          # Port scanning and service discovery across nodes
+  - wget                          # Alternative HTTP probe tool
+  - jq                            # JSON parsing for `crictl inspect` and runtime metadata
+  - auditd                        # System audit logging for symbolic rupture tracing
+  - e2fsprogs                     # Filesystem diagnostics (fsck, tune2fs, etc.)
+  - util-linux                    # Includes mount, umount, blkid, and other core tools
+  - prometheus-node-exporter     # Exposes system metrics for Prometheus scraping
+
 
 # Register kubelet as a sytemd service
 write_files:
@@ -26,12 +46,20 @@ write_files:
     permissions: '0644'
     content: |
       [Unit]
-      Description=Kubelet
+      Description=Kubelet Service
       Documentation=https://kubernetes.io/docs/
       After=network.target
 
       [Service]
-      ExecStart=/usr/bin/kubelet
+      ExecStart=/usr/bin/kubelet \
+        --pod-manifest-path=/etc/kubernetes/manifests \
+        --container-runtime=remote \
+        --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \
+        --fail-swap-on=false \
+        --cgroup-driver=systemd \
+        --hostname-override=localhost \
+        --log-level=info \
+        --v=2
       Restart=always
       StartLimitInterval=0
       RestartSec=10

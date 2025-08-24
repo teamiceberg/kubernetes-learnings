@@ -32,9 +32,10 @@ multipass shell $VM_NAME <<'EOF'
   sudo systemctl daemon-reload
 
   echo "🔧 Starting kubelet and containerd..."
-  sudo systemctl start containerd
-  sudo systemctl start kubelet
+  sudo systemctl restart containerd || true
+  sudo systemctl restart kubelet || true
 
-  echo "✅ Preflight buffer applied. Ready for kubeadm init."
+  echo "✅ Init prep applied. Ready for kubeadm init."
+ 
 EOF
 
