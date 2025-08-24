@@ -1,11 +1,10 @@
-#!/bin/bash
-#launch a multipass kubernetes cluster on ubuntu 24.04 LTS on Apple Silicon
 
-#!/bin/bash
+#launch a multipass kubernetes cluster on ubuntu 24.04 LTS on Apple Silicon
 
 # ┌────────────────────────────────────────────┐
 # │  Launch 7 Multipass VMs for Cluster Rehearsal │
 # └────────────────────────────────────────────┘
+#!/bin/bash
 
 # Delete Control Plane VMs
 for i in 1 2 3; do

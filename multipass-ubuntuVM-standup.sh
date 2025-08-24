@@ -1,7 +1,8 @@
-#!/bin/bash
+
 #launch a multipass kubernetes cluster on ubuntu 24.04 LTS on Apple Silicon
 
 #!/bin/bash
+set -e
 
 # ┌────────────────────────────────────────────┐
 # │  Launch 7 Multipass VMs for Cluster Rehearsal │
