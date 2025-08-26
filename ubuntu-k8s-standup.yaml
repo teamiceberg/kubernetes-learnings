@@ -42,6 +42,28 @@ packages:
 
 # Register kubelet as a sytemd service
 write_files:
+  - path: /home/ubuntu/etc/kubelet-config.yaml
+    permissions: '0644'
+    content: |
+      apiVersion: kubelet.config.k8s.io/v1beta1
+      kind: KubeletConfiguration
+      address: "192.168.0.8"
+      port: 20250
+      serializeImagePulls: false
+      cgroupDriver: systemd
+      failSwapOn: false
+      podManifestPath: /etc/kubernetes/manifests
+      containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
+      hostnameOverride: localhost
+      logging:
+        verbosity: 5
+      evictionHard:
+        memory.available: "100Mi"
+        nodefs.available: "10%"
+        nodefs.inodesFree: "5%"
+        imagefs.available: "15%"
+        imagefs.inodesFree: "5%"
+
   - path: /etc/systemd/system/kubelet.service
     permissions: '0644'
     content: |
@@ -49,17 +71,11 @@ write_files:
       Description=Kubelet Service
       Documentation=https://kubernetes.io/docs/
       After=network.target
-
+      logging:
+        verbosity: 5
       [Service]
       ExecStart=/usr/bin/kubelet \
-        --pod-manifest-path=/etc/kubernetes/manifests \
-        --container-runtime=remote \
-        --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \
-        --fail-swap-on=false \
-        --cgroup-driver=systemd \
-        --hostname-override=localhost \
-        --log-level=info \
-        --v=2
+        --config=/home/ubuntu/etc/kubelet-config.yaml
       Restart=always
       StartLimitInterval=0
       RestartSec=10
