@@ -1,8 +1,7 @@
 
-#launch a multipass kubernetes cluster on ubuntu 24.04 LTS on Apple Silicon
 
 # ┌────────────────────────────────────────────┐
-# │  Launch 7 Multipass VMs for Cluster Rehearsal │
+# │  Safe Delete all VMs and clean up          │
 # └────────────────────────────────────────────┘
 #!/bin/bash
 

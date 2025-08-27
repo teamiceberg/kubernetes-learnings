@@ -1,13 +1,18 @@
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
-address: "192.168.0.8"
+address: 0.0.0.0
 port: 20250
+readOnlyPort: 0
 serializeImagePulls: false
 cgroupDriver: systemd
 failSwapOn: false
-podManifestPath: /etc/kubernetes/manifests
+staticPodPath: /etc/kubernetes/manifests
 containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
-hostnameOverride: localhost
+authentication:
+  webhook:
+    enabled: false
+authorization:
+  mode: AlwaysAllow
 logging:
   verbosity: 5
 evictionHard:
