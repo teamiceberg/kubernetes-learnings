@@ -1,7 +1,7 @@
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: InitConfiguration
 localAPIEndpoint:
-  advertiseAddress: 192.168.71.24
+  advertiseAddress: 192.168.71.31
 nodeRegistration:
   criSocket: "unix:///var/run/containerd/containerd.sock"
   name: cp-1
@@ -19,7 +19,7 @@ networking:
 apiServer:
   certSANs:
     - 127.0.0.1
-    - 192.168.71.24
+    - 192.168.71.31
     - 10.96.0.1
     - localhost
 controllerManager:

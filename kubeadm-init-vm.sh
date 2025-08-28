@@ -2,22 +2,21 @@
 set -e
 
 VM_NAME="cp-1"
+POD_CIDR="192.168.0.0/16"
+K8S_VERSION="v1.33.4"
+VM_IP=$(multipass info "$VM_NAME" --format json | jq -r '.info."'"$VM_NAME"'".ipv4[0]')
 
-echo -e "\nRecopying certain configs to /tmp folder if they get wiped out when init-vm-prep is run!!!"
-[ ! -f /tmp/kubelet-config.yaml ] && multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/kubelet-config.yaml $VM_NAME:/tmp/
-[ ! -f /tmp/kubeadm-config.yaml ] && multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/kubeadm-config.yaml $VM_NAME:/tmp/
-[ ! -f /tmp/crictl.yaml ] && multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/crictl.yaml $VM_NAME:/tmp/
+echo -e "\nRecopying certain configs to /tmp folder ifshould they get wiped out when init-vm-prep is run!!!"
+multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/kubelet-config.yaml $VM_NAME:/tmp/
+multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/kubeadm-config.yaml $VM_NAME:/tmp/
+multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/crictl.yaml $VM_NAME:/tmp/
+
 
 echo "Entering $VM_NAME to initialize control plane and CNI..."
 
 multipass shell $VM_NAME << EOF
   set -euo pipefail
-
-  POD_CIDR="192.168.0.0/16"
-  K8S_VERSION="v1.33.4"
-  VM_NAME="cp-1"
  
-
   echo "Starting kubelet and containerd..."
   [ -f /tmp/kubelet-config.yaml ] && sudo cp -f /tmp/kubelet-config.yaml /etc/kubernetes/kubelet-config.yaml
   [ -f /tmp/kubelet-config.yaml ] && sudo chmod 644 /etc/kubernetes/kubelet-config.yaml
@@ -38,6 +37,10 @@ multipass shell $VM_NAME << EOF
   sudo containerd config default | sudo tee /etc/containerd/config.toml > /dev/null
   sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
   sudo sed -i 's/systemd_cgroup = true/systemd_cgroup = false/g' /etc/containerd/config.toml
+
+  echo -e "\nAssigning the correct VM IP to kubeadm-config..."
+  sudo sed -i 's/^ *advertiseAddress:.*$/  advertiseAddress: ${VM_IP}/' /etc/kubernetes/kubeadm-config.yaml
+  
 
 
   echo -e "\nRestarting services..."
