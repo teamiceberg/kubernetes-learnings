@@ -1,10 +1,4 @@
 #!/bin/bash
-
-##  echo -e "\nMuting kubelet port 10250..."
-  #echo -e "[Service]\nExecStart=\nExecStart=/usr/bin/kubelet --config=/home/ubuntu/etc/kubernetes/kubelet-config.yaml" | \
-    #sudo tee /etc/systemd/system/kubelet.service.d/99-override.conf &> /dev/null
-
-
 set -e
 
 VM_NAME="cp-1"
@@ -14,20 +8,20 @@ multipass shell $VM_NAME <<EOF
   set -euo pipefail
 
   VM_NAME="cp-1"
- 
-  echo -e "\nStopping services..."
-  sudo systemctl stop kubelet || true
-  sudo systemctl stop containerd || true
-  sudo pkill -f kubelet || true
-  sudo pkill -f containerd || true
 
-  echo -e "\nRemoving confs and manifests..."
-  sudo rm -rf /etc/kubernetes/*
-  sudo rm -rf ~/.kube/*
+  echo -e "\nResetting kubeadm first..."
+  sudo kubeadm reset --force
+  sudo systemctl daemon-reload
+  sudo systemctl restart containerd
+
+  echo -e "\nRemoving iptables, confs and manifests..."
+  sudo rm -rf /etc/kubernetes/* /var/lib/kubelet/* /var/lib/etcd/*
+  sudo iptables -F && sudo iptables -t nat -F && sudo iptables -t mangle -F && sudo iptables -X
 
   echo -e "\nReloading systemd..."
   sudo systemctl daemon-reexec
   sudo systemctl daemon-reload
+
 
   echo -e "\n✅ Init prep applied to $VM_NAME. Ready for kubeadm init.\n"
  

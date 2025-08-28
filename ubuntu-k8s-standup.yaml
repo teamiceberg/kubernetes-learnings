@@ -13,7 +13,6 @@ packages:
   - gnupg                         # Handles GPG keys for repo signing
   - lsb-release                   # Detects distro info for conditional logic
   - software-properties-common    # Adds external repositories
-  - containerd                    # Container runtime (preferred over Docker)
   - socat                         # Required for kube-proxy and port forwarding
   - conntrack                     # Tracks network connections (used by kube-proxy)
   - iptables                      # Ensures firewall compatibility
@@ -22,7 +21,7 @@ packages:
   - net-tools                     # Legacy but useful for `ifconfig`, `netstat`
   - neovim                        # For clarity annotation and YAML editing
   - systemd                       # Ensures journalctl and service management
-  - yamllint                      # Find errors in yaml files
+  - yamllint                      # Find lint errors in yaml files
 
   # Diagnostic and Monitoring Suite
   - htop                          # Interactive process viewer for CPU/memory load
@@ -41,14 +40,51 @@ packages:
   - prometheus-node-exporter     # Exposes system metrics for Prometheus scraping
 
 
-# Register kubelet as a sytemd service
+# Various write files
 write_files:
-  - path: /etc/kubernetes/kubelet-config.yaml
+  - path: /etc/crictl.yaml
     content: |
-      apiVersion: kubelet.config.k8s.io/v1beta3
+      runtime-endpoint: unix:///var/run/containerd/containerd.sock
+      image-endpoint: unix:///var/run/containerd/containerd.sock
+      timeout: 10
+      debug: false
+  - path: /etc/kubernetes/kubeadm-config.yaml
+    content: |
+      apiVersion: kubeadm.k8s.io/v1beta3
+      kind: InitConfiguration
+      localAPIEndpoint:
+        advertiseAddress: 192.168.70.1
+      nodeRegistration:
+        criSocket: "unix:///var/run/containerd/containerd.sock"
+        name: cp-1
+        kubeletExtraArgs:
+          hostname-override: cp-1
+          v: "5"
+      ---
+      apiVersion: kubeadm.k8s.io/v1beta3
+      kind: ClusterConfiguration
+      kubernetesVersion: "v1.33.4"
+      imageRepository: registry.k8s.io
+      networking:
+        podSubnet: "192.168.0.0/16"
+        serviceSubnet: "10.96.0.0/12"
+      apiServer:
+        certSANs:
+          - 127.0.0.1
+          - 192.168.70.72
+          - 10.96.0.1
+          - localhost
+      controllerManager:
+        extraArgs:
+          bind-address: "127.0.0.1"
+      scheduler:
+        extraArgs:
+          bind-address: "127.0.0.1"
+      ---
+      apiVersion: kubelet.config.k8s.io/v1beta1
       kind: KubeletConfiguration
       address: 0.0.0.0
-      port: 20250
+      port: 10250
       readOnlyPort: 0
       serializeImagePulls: false
       cgroupDriver: systemd
@@ -71,67 +107,54 @@ write_files:
 
   - path: /etc/kubernetes/kubeadm-config.yaml
     content: |
-      apiVersion: kubeadm.k8s.io/v1beta3
-      kind: ClusterConfiguration
-      kubernetesVersion: "v1.33.4"
-      imageRepository: registry.k8s.io
-      networking:
-        podSubnet: "192.168.0.0/16"
-      apiServer:
-        certSANs:
-          - 127.0.0.1
-          - 192.168.70.49
-          - 10.96.0.1
-          - localhost
-      controllerManager:
-        extraArgs:
-          bind-address: "127.0.0.1"
-      scheduler:
-        extraArgs:
-          bind-address: "127.0.0.1"
-      ---
-      apiVersion: kubeadm.k8s.io/v1beta3
-      kind: InitConfiguration
-      nodeRegistration:
-        name: cp-1
-        kubeletExtraArgs:
-          v: "5"
-
-  - path: /etc/systemd/system/kubelet.service
-    content: |
-      [Unit]
-      Description=Kubelet Service
-      Documentation=https://kubernetes.io/docs/
-      After=network.target
+      apiVersion: kubelet.config.k8s.io/v1beta1
+      kind: KubeletConfiguration
+      address: 0.0.0.0
+      port: 10250
+      readOnlyPort: 0
+      serializeImagePulls: false
+      cgroupDriver: systemd
+      failSwapOn: false
+      staticPodPath: /etc/kubernetes/manifests
+      containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
+      authentication:
+        webhook:
+          enabled: false
+      authorization:
+        mode: AlwaysAllow
       logging:
         verbosity: 5
-      [Service]
-      ExecStart=/usr/bin/kubelet \
-        --config=/etc/kubernetes/kubelet-config.yaml
-      Restart=always
-      StartLimitInterval=0
-      RestartSec=10
-
-      [Install]
-      WantedBy=multi-user.target
+      evictionHard:
+          memory.available:  "100Mi"
+          nodefs.available:  "10%"
+          nodefs.inodesFree: "5%"
+          imagefs.available: "15%"
+          imagefs.inodesFree: "5%"
 
 
 runcmd:
-  # Update package index
-  - sudo apt-get update -y
+  # Add Docker GPG key
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  - chmod a+r /etc/apt/keyrings/docker.gpg
 
+  # Add Docker APT repository
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  
   # Create all startup directories
   - sudo mkdir -p /etc/systemd/system/kubelet.service.d
   - sudo mkdir -p /home/ubuntu/.kube
   - sudo mkdir -p /etc/kubernetes
   - sudo mkdir -p /opt/cni/bin
+  - sudo mkdir -p /etc/containerd
 
-  # Install Kubernetes binaries (ARM64)
-  - curl -LO https://dl.k8s.io/release/v1.33.4/bin/linux/arm64/kubectl
-  - curl -LO https://dl.k8s.io/release/v1.33.4/bin/linux/arm64/kubeadm
-  - curl -LO https://dl.k8s.io/release/v1.33.4/bin/linux/arm64/kubelet
-  - chmod +x kubectl kubeadm kubelet
-  - sudo mv kubectl kubeadm kubelet /usr/bin/
+
+  # Install kubectl, kubeadm, and kubelet from the official pkgs.k8s.io repository
+  - curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  - chmod a+r /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  - echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list > /dev/null
+  - apt-get update
+  - apt-get install -y etcd-client containerd.io kubelet kubeadm kubectl
+  - apt-mark hold containerd.io kubelet kubeadm kubectl
 
   # Installl Calico CNI plugins and calicoctl
   - curl -LO https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-amd64-v1.3.0.tgz
@@ -147,9 +170,9 @@ runcmd:
   - chmod +x crictl
   - sudo mv crictl /usr/local/bin/
 
-  # Configure containerd
-  - sudo mkdir -p /etc/containerd
+  # Configure containerd. cgroup drivers must match.
   - sudo containerd config default | sudo tee /etc/containerd/config.toml > /dev/null
+  - sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
   
   # Initialize bridge traffic inspection (CNI compatibility)
   - modprobe br_netfilter
@@ -158,10 +181,9 @@ runcmd:
   - sudo sysctl --system
 
   # Enable kubelet, containerd etc. Ensure the 'write_files' section is pre-configured
- 
   - sudo systemctl daemon-reexec
   - sudo systemctl daemon-reload
   - sudo systemctl enable kubelet
   - sudo systemctl enable containerd
-
-## TODO: rebooting
+  - sudo systemctl start kubelet
+  - sudo systemctl start containerd

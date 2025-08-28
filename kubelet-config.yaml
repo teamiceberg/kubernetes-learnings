@@ -1,13 +1,14 @@
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
 address: 0.0.0.0
-port: 20250
+port: 10250
 readOnlyPort: 0
 serializeImagePulls: false
 cgroupDriver: systemd
 failSwapOn: false
 staticPodPath: /etc/kubernetes/manifests
 containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
+imageServiceEndpoint: "unix:///var/run/containerd/containerd.sock"
 authentication:
   webhook:
     enabled: false

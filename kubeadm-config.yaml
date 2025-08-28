@@ -1,13 +1,25 @@
 apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 192.168.71.24
+nodeRegistration:
+  criSocket: "unix:///var/run/containerd/containerd.sock"
+  name: cp-1
+  kubeletExtraArgs:
+    hostname-override: cp-1
+    v: "5"
+---
+apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 kubernetesVersion: "v1.33.4"
 imageRepository: registry.k8s.io
 networking:
   podSubnet: "192.168.0.0/16"
+  serviceSubnet: "10.96.0.0/12"
 apiServer:
   certSANs:
     - 127.0.0.1
-    - 192.168.70.49
+    - 192.168.71.24
     - 10.96.0.1
     - localhost
 controllerManager:
@@ -17,9 +29,27 @@ scheduler:
   extraArgs:
     bind-address: "127.0.0.1"
 ---
-apiVersion: kubeadm.k8s.io/v1beta3
-kind: InitConfiguration
-nodeRegistration:
-  name: cp-1
-  kubeletExtraArgs:
-    v: "5"
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+address: 0.0.0.0
+port: 10250
+readOnlyPort: 0
+serializeImagePulls: false
+cgroupDriver: systemd
+failSwapOn: false
+staticPodPath: /etc/kubernetes/manifests
+containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
+imageServiceEndpoint: "unix:///var/run/containerd/containerd.sock"
+authentication:
+  webhook:
+    enabled: false
+authorization:
+  mode: AlwaysAllow
+logging:
+  verbosity: 5
+evictionHard:
+    memory.available:  "100Mi"
+    nodefs.available:  "10%"
+    nodefs.inodesFree: "5%"
+    imagefs.available: "15%"
+    imagefs.inodesFree: "5%"
