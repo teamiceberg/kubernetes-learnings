@@ -64,16 +64,28 @@ multipass shell $VM_NAME << EOF
   sudo cp -f /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
   sudo chmod 644 /home/ubuntu/.kube/config
 
-  echo -e "\nRunning kubeadm init ..."
-  sudo kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
-
-  echo -e "\nRunning kubeadm init phase upload-certs..."
+  echo -e "\nRunning kubeadm init remaining phases..."
+  echo -e "\nRunning phase control-plane all..."
+  sudo kubeadm init phase control-plane all --config=/etc/kubernetes/kubeadm-config.yaml --v=5
+  echo -e "\nRunning phase etcd local..."
+  sudo kubeadm init phase etcd local --config=/etc/kubernetes/kubeadm-config.yaml --v=5
+  echo -e "\nRunning phase kubelet-start..."
+  sudo kubeadm init phase kubelet-start --config=/etc/kubernetes/kubeadm-config.yaml --v=5
+  echo -e "\nRunning phase kubeadm-config..."
+  sudo kubeadm init phase upload-config all --v=5
+  echo -e "\nRunning phase mark-control-plane..."
+  sudo kubeadm init phase mark-control-plane --config=/etc/kubernetes/kubeadm-config.yaml --v=5
+  echo -e "\nRunning phase addon all..."
+  sudo kubeadm init phase addon all --config=/etc/kubernetes/kubeadm-config.yaml --v=5
+  echo -e "\nRunning phase bootstrap-token..."
+  sudo kubeadm init phase bootstrap-token --config=/etc/kubernetes/kubeadm-config.yaml --v=5
   sudo chmod 644 /etc/kubernetes/*.conf
   sudo chmod 644 /etc/kubernetes/pki/*.*
   sudo chmod 644 /etc/kubernetes/pki/etcd/*.*
+  echo -e "\nRunning kubeadm init phase upload-certs..."
   sudo kubeadm init phase upload-certs --upload-certs --v=5 | grep -oE '[a-f0-9]{64}' | sudo tee /root/cert-key.key
 
-  echo -e "\nKubeadm init done. Initiating Calico CNI for pod network..."
+  echo -e "\nKubeadm init all phases done. Initiating Calico CNI..."
   kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/calico.yaml
 
   echo -e "\n\n✅ Init complete for $VM_NAME. Control plane and Calico-ready networking are now live."

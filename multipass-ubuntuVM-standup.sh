@@ -19,15 +19,15 @@ done
 # CPU Worker VMs
 for i in 1 2; do
   multipass launch --name "cpu-worker-$i" \
-    --cpus 2 --memory 4G --disk 15G \
+    --cpus 1 --memory 2G --disk 15G \
     --cloud-init ./ubuntu-k8s-standup.yaml
   sleep 10
 done
 
-# GPU Worker VMs (simulated)
-for i in 1 2; do
-  multipass launch --name "gpu-worker-$i" \
-    --cpus 4 --memory 8G --disk 20G \
+# Bastion VMs
+for i in 1; do
+  multipass launch --name "bastion-$i" \
+    --cpus 1 --memory 1G --disk 15G \
     --cloud-init ./ubuntu-k8s-standup.yaml
   sleep 10
 done

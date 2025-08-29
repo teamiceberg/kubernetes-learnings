@@ -39,98 +39,6 @@ packages:
   - util-linux                    # Includes mount, umount, blkid, and other core tools
   - prometheus-node-exporter     # Exposes system metrics for Prometheus scraping
 
-
-# Various write files
-write_files:
-  - path: /etc/crictl.yaml
-    content: |
-      runtime-endpoint: unix:///var/run/containerd/containerd.sock
-      image-endpoint: unix:///var/run/containerd/containerd.sock
-      timeout: 10
-      debug: false
-  - path: /etc/kubernetes/kubeadm-config.yaml
-    content: |
-      apiVersion: kubeadm.k8s.io/v1beta3
-      kind: InitConfiguration
-      localAPIEndpoint:
-        advertiseAddress: 
-      nodeRegistration:
-        criSocket: "unix:///var/run/containerd/containerd.sock"
-        name: cp-1
-        kubeletExtraArgs:
-          hostname-override: cp-1
-          v: "5"
-      ---
-      apiVersion: kubeadm.k8s.io/v1beta3
-      kind: ClusterConfiguration
-      kubernetesVersion: "v1.33.4"
-      imageRepository: registry.k8s.io
-      networking:
-        podSubnet: "192.168.0.0/16"
-        serviceSubnet: "10.96.0.0/12"
-      apiServer:
-        certSANs:
-          - 127.0.0.1
-          - 10.96.0.1
-          - localhost
-      controllerManager:
-        extraArgs:
-          bind-address: "127.0.0.1"
-      scheduler:
-        extraArgs:
-          bind-address: "127.0.0.1"
-      ---
-      apiVersion: kubelet.config.k8s.io/v1beta1
-      kind: KubeletConfiguration
-      address: 0.0.0.0
-      port: 10250
-      readOnlyPort: 0
-      serializeImagePulls: false
-      cgroupDriver: systemd
-      failSwapOn: false
-      staticPodPath: /etc/kubernetes/manifests
-      containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
-      authentication:
-        webhook:
-          enabled: false
-      authorization:
-        mode: AlwaysAllow
-      logging:
-        verbosity: 5
-      evictionHard:
-          memory.available:  "100Mi"
-          nodefs.available:  "10%"
-          nodefs.inodesFree: "5%"
-          imagefs.available: "15%"
-          imagefs.inodesFree: "5%"
-
-  - path: /etc/kubernetes/kubeadm-config.yaml
-    content: |
-      apiVersion: kubelet.config.k8s.io/v1beta1
-      kind: KubeletConfiguration
-      address: 0.0.0.0
-      port: 10250
-      readOnlyPort: 0
-      serializeImagePulls: false
-      cgroupDriver: systemd
-      failSwapOn: false
-      staticPodPath: /etc/kubernetes/manifests
-      containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
-      authentication:
-        webhook:
-          enabled: false
-      authorization:
-        mode: AlwaysAllow
-      logging:
-        verbosity: 5
-      evictionHard:
-          memory.available:  "100Mi"
-          nodefs.available:  "10%"
-          nodefs.inodesFree: "5%"
-          imagefs.available: "15%"
-          imagefs.inodesFree: "5%"
-
-
 runcmd:
   # Add Docker GPG key
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -179,7 +87,12 @@ runcmd:
   - grep -qxF 'net.bridge.bridge-nf-call-iptables=1' /etc/sysctl.d/k8s.conf | echo 'net.bridge.bridge-nf-call-iptables=1' | sudo tee -a /etc/sysctl.d/k8s.conf
   - sudo sysctl --system
 
-  # Enable kubelet, containerd etc. Ensure the 'write_files' section is pre-configured
+  # Enabling IP forwarding..."
+  - sudo sysctl -w net.ipv4.ip_forward=1
+  - grep -qxF 'net.ipv4.ip_forward = 1' /etc/sysctl.conf || echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
+  - sudo sysctl -p
+
+  # Enable kubelet, containerd etc.
   - sudo systemctl daemon-reexec
   - sudo systemctl daemon-reload
   - sudo systemctl enable kubelet
