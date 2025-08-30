@@ -50,7 +50,7 @@ containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
 imageServiceEndpoint: "unix:///var/run/containerd/containerd.sock"
 authentication:
   webhook:
-    enabled: false
+    enabled: true
 authorization:
   mode: Webhook
 logging:

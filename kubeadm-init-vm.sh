@@ -5,6 +5,7 @@ VM_NAME="cp-1"
 POD_CIDR="192.168.0.0/16"
 K8S_VERSION="v1.33.4"
 VM_IP=$(multipass info "$VM_NAME" --format json | jq -r '.info."'"$VM_NAME"'".ipv4[0]')
+ETCD_PORT="2379"
 
 echo -e "\nRecopying certain configs to /tmp folder ifshould they get wiped out when init-vm-prep is run!!!"
 multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/kubelet-config.yaml $VM_NAME:/tmp/
@@ -28,7 +29,7 @@ multipass shell $VM_NAME << EOF
   sudo systemctl restart containerd || true
   sudo systemctl restart kubelet || true
 
-  echo -e "\nEnabling IP forwarding..."
+  echo -e "\nRe-Enabling IP forwarding..."
   sudo sysctl -w net.ipv4.ip_forward=1
   grep -qxF 'net.ipv4.ip_forward = 1' /etc/sysctl.conf || echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
   sudo sysctl -p
@@ -37,6 +38,7 @@ multipass shell $VM_NAME << EOF
   sudo containerd config default | sudo tee /etc/containerd/config.toml > /dev/null
   sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
   sudo sed -i 's/systemd_cgroup = true/systemd_cgroup = false/g' /etc/containerd/config.toml
+  sudo sed -i 's|pause:3\.8|pause:3.10|g' /etc/containerd/config.toml
 
   echo -e "\nAssigning the correct VM IP to various kubeadm-config flags..."
   sudo sed -i 's/^ *advertiseAddress:.*$/  advertiseAddress: ${VM_IP}/' /etc/kubernetes/kubeadm-config.yaml
@@ -49,10 +51,8 @@ multipass shell $VM_NAME << EOF
   sudo systemctl daemon-reload
   sudo systemctl restart kubelet
   sudo systemctl restart containerd
-  
-  echo -e "\nRunning 'kubeadm init' PHASEWISE for $VM_NAME..."
 
-  echo -e "\nRunning 'kubeadm init' up to kubeconfig admin phase..."
+  echo -e "\nRunning 'kubeadm init' up to kubeconfig admin phase for $VM_NAME..."
   
   sudo kubeadm init phase certs all --config=/etc/kubernetes/kubeadm-config.yaml --v=5
   sudo kubeadm init phase kubeconfig all --config=/etc/kubernetes/kubeadm-config.yaml  --v=5
@@ -64,7 +64,7 @@ multipass shell $VM_NAME << EOF
   sudo cp -f /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
   sudo chmod 644 /home/ubuntu/.kube/config
 
-  echo -e "\nRunning kubeadm init ..."
+  echo -e "\nRunning kubeadm init fully for $VM_NAME..."
   sudo kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
 
   echo -e "\nRunning kubeadm init phase upload-certs..."
@@ -73,10 +73,23 @@ multipass shell $VM_NAME << EOF
   sudo chmod 644 /etc/kubernetes/pki/etcd/*.*
   sudo kubeadm init phase upload-certs --upload-certs --v=5 | grep -oE '[a-f0-9]{64}' | sudo tee /root/cert-key.key
 
-  echo -e "\nKubeadm init done. Initiating Calico CNI for pod network..."
-  kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/calico.yaml
+  echo -e "\nKubeadm init done. Initiating Calico CNI and Tigera operator for pod network..."
+  kubectl apply --server-side -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.2/manifests/tigera-operator.yaml
+  kubectl apply --server-side -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.2/manifests/operator-crds.yaml
+  kubectl apply --server-side -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.2/manifests/custom-resources.yaml
+
+
+
+  echo -e "\nChecking etcd database health...\n"
+  sudo etcdctl \
+  --endpoints=${VM_IP}:${ETCD_PORT} \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+  --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
+  endpoint health
 
   echo -e "\n\n✅ Init complete for $VM_NAME. Control plane and Calico-ready networking are now live."
+
   
 EOF
 
