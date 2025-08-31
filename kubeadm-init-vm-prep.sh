@@ -1,13 +1,17 @@
 #!/bin/bash
 set -e
 
-VM_NAME="cp-1"
+# VM Name to Init Prep
+VM_NAME="$1"
+
+if [ -z "$VM_NAME" ]; then
+  echo "Usage: $0 <vm-name>"
+  exit 1
+fi
 
 echo -e "\nEntering $VM_NAME to apply kubeadm init prep..."
 multipass shell $VM_NAME <<EOF
   set -euo pipefail
-
-  VM_NAME="cp-1"
 
   echo -e "\nResetting kubeadm first..."
   sudo kubeadm reset --force

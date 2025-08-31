@@ -1,7 +1,14 @@
 #!/bin/bash
 set -e
 
-VM_NAME="cp-1"
+# VM Name to Init
+VM_NAME="$1"
+
+if [ -z "$VM_NAME" ]; then
+  echo "Usage: $0 <vm-name>"
+  exit 1
+fi
+
 POD_CIDR="192.168.0.0/16"
 K8S_VERSION="v1.33.4"
 VM_IP=$(multipass info "$VM_NAME" --format json | jq -r '.info."'"$VM_NAME"'".ipv4[0]')
@@ -11,7 +18,6 @@ echo -e "\nRecopying certain configs to /tmp folder ifshould they get wiped out 
 multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/kubelet-config.yaml $VM_NAME:/tmp/
 multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/kubeadm-config.yaml $VM_NAME:/tmp/
 multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/crictl.yaml $VM_NAME:/tmp/
-
 
 echo "Entering $VM_NAME to initialize control plane and CNI..."
 
@@ -65,7 +71,7 @@ multipass shell $VM_NAME << EOF
   sudo chmod 644 /home/ubuntu/.kube/config
 
   echo -e "\nRunning kubeadm init fully for $VM_NAME..."
-  sudo kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
+  sudo kubeadm init --config /etc/kubernetes/kubeadm-config.yaml | sudo tee /root/kubeadm-init-output.txt
 
   echo -e "\nRunning kubeadm init phase upload-certs..."
   sudo chmod 644 /etc/kubernetes/*.conf
@@ -86,7 +92,7 @@ multipass shell $VM_NAME << EOF
   --cacert=/etc/kubernetes/pki/etcd/ca.crt \
   --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
   --key=/etc/kubernetes/pki/etcd/healthcheck-client.key \
-  endpoint health
+  endpoint health | sudo tee /root/etcd-endpoint-healthstatus.txt
 
   echo -e "\n\n✅ Init complete for $VM_NAME. Control plane and Calico-ready networking are now live."
 
