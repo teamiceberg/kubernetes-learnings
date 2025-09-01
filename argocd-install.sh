@@ -1,32 +1,35 @@
 #!/bin/bash
 set -e
 
-VM_NAME="cp-1"
+# VM Name to Init
+CP_VM="$1"
 
-echo "🔐 Entering Multipass shell for $VM_NAME..."
-multipass shell $VM_NAME <<'EOF'
+if [ -z "$CP_VM" ]; then
+  echo "Usage: $0 <cp-vm-name>"
+  exit 1
+fi
 
-echo "📦 Installing ArgoCD components..."
 
-# Create namespace
-kubectl create namespace argocd
+echo "Entering Multipass shell for $CP_VM..."
+multipass shell $CP_VM <<EOF
 
-# Install ArgoCD using official manifests
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  set -euo pipefail
 
-echo "✅ ArgoCD installed in namespace 'argocd'"
+  # Create namespace
+  kubectl create namespace argocd
 
-# Expose ArgoCD server via NodePort (for local access)
-kubectl patch svc argocd-server -n argocd \
-  -p '{"spec": {"type": "NodePort"}}'
+  # Install Argo CD core components
+  kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-echo "🌐 ArgoCD server exposed via NodePort"
+  # Expose Argo CD server (NodePort for simplicity)
+  kubectl patch svc argocd-server -n argocd \
+  -p '{"spec": {"type": "NodePort", "ports": [{"port": 443, "targetPort": 8080, "nodePort": 10443}]}}'
 
-# Print initial admin password
-echo "🔑 Initial ArgoCD admin password:"
-kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath="{.data.password}" | base64 -d && echo
+  # Get initial admin password
+  kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 -d && echo
+
+  echo -e"\nArgoCD installation complete on $CP_VM"
 
 EOF
 
-echo "🎯 ArgoCD installation complete on $VM_NAME"
+
