@@ -1,0 +1,11 @@
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: cp-l2advert
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - cp-pool
+  nodeSelectors:
+    - matchLabels:
+        node-role.kubernetes.io/control-plane: ""
