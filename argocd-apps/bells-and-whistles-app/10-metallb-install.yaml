@@ -12,9 +12,9 @@ spec:
     server: https://kubernetes.default.svc
     namespace: metallb-system
   source:
-    repoURL: https://github.com/metallb/metallb.git
-    targetRevision: v0.15.2
-    path: config/manifests
+    repoURL: https://github.com/teamiceberg/multipass-k8s-vms-on-apple-m1.git
+    targetRevision: master
+    path: argocd-apps/bells-and-whistles-app
   syncPolicy:
     automated:
       prune: true
