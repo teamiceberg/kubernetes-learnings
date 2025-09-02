@@ -18,6 +18,7 @@ echo -e "\nRecopying certain configs to /tmp folder ifshould they get wiped out 
 multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/kubelet-config.yaml $VM_NAME:/tmp/
 multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/kubeadm-config.yaml $VM_NAME:/tmp/
 multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/crictl.yaml $VM_NAME:/tmp/
+multipass transfer /Users/shivamacpro/LearningProjects/alembic-learnings/calico-cr-install.yaml $VM_NAME:/tmp/
 
 echo "Entering $VM_NAME to initialize control plane and CNI..."
 
@@ -31,6 +32,8 @@ multipass shell $VM_NAME << EOF
   [ -f /tmp/kubeadm-config.yaml ] && sudo chmod 644 /etc/kubernetes/kubeadm-config.yaml
   [ -f /tmp/crictl.yaml ] && sudo cp -f /tmp/crictl.yaml /etc/crictl.yaml
   [ -f /tmp/crictl.yaml ] && sudo chmod 644 /etc/crictl.yaml
+  [ -f /tmp/calico-cr-install.yaml ] && sudo cp -f /tmp/calico-cr-install.yaml /etc/calico/calico-cr-install.yaml
+  [ -f /tmp/calico-cr-install.yaml ] && sudo chmod 644 /etc/calico/calico-cr-install.yaml
 
   sudo systemctl restart containerd || true
   sudo systemctl restart kubelet || true
@@ -80,9 +83,9 @@ multipass shell $VM_NAME << EOF
   sudo kubeadm init phase upload-certs --upload-certs --v=5 | grep -oE '[a-f0-9]{64}' | sudo tee /root/cert-key.key
 
   echo -e "\nKubeadm init done. Initiating Calico CNI and Tigera operator for pod network..."
-  kubectl apply --server-side -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.2/manifests/tigera-operator.yaml
-  kubectl apply --server-side -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.2/manifests/operator-crds.yaml
-  kubectl apply --server-side -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.2/manifests/custom-resources.yaml
+  kubectl apply --server-side -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.2/manifests/tigera-operator.yaml | sudo tee /root/tigera-operator-output.txt
+  kubectl apply --server-side -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.2/manifests/operator-crds.yaml | sudo tee /root/operator-crds-output.txt    
+  kubectl apply --server-side -f /etc/calico/calico-cr-install.yaml | sudo tee /root/calico-cr-install-output.txt
 
 
 
