@@ -1,0 +1,12 @@
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: cp-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.74.200-192.168.74.250
+  autoAssign: true
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/control-plane: ""
