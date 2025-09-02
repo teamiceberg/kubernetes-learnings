@@ -1,0 +1,50 @@
+# Global defaults applied to all Argo CD components
+global:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+# Argo CD API server (UI + API)
+# Argo CD API server (UI + API)
+server:
+  replicas: 1
+  service:
+    type: NodePort          # change from ClusterIP
+    nodePortHttp: 30080     # optional, if you want HTTP exposed
+    nodePortHttps: 30443    # your desired HTTPS NodePort
+    servicePortHttp: 80
+    servicePortHttps: 443
+  extraArgs: []
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+# Argo CD repo-server (fetches and renders manifests)
+repoServer:
+  replicas: 1
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+# Argo CD application-controller (syncs live state to desired state)
+controller:
+  replicas: 1
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+# Optional: Dex (OIDC provider) — disable if not needed
+dex:
+  enabled: false

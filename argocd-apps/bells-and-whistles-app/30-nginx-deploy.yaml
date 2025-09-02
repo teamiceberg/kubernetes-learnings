@@ -12,6 +12,11 @@ metadata:
   namespace: nginx-app
 spec:
   replicas: 3
+  strategy:                      # rolling update strategy
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1          # how many Pods can be down at once
+      maxSurge: 1                 # how many extra Pods above desired replicas
   selector:
     matchLabels:
       app: nginx

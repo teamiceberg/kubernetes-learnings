@@ -1,1 +1,3 @@
 argo-cd/
+.vscode/
+.DS_Store
