@@ -1,0 +1,36 @@
+# 01-deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lb-test
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: lb-test
+  template:
+    metadata:
+      labels:
+        app: lb-test
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+---
+# 02-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: lb-test
+  namespace: default
+spec:
+  type: LoadBalancer
+  selector:
+    app: lb-test
+  ports:
+    - name: http-alt
+      port: 8080       # External port clients connect to
+      targetPort: 80   # Internal port on the Pod (NGINX)
