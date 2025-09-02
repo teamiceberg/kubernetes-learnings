@@ -20,6 +20,8 @@ spec:
       labels:
         app: nginx
     spec:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
       containers:
         - name: nginx
           image: nginx:alpine
@@ -44,3 +46,4 @@ spec:
               port: 80
             initialDelaySeconds: 15
             periodSeconds: 20
+      
