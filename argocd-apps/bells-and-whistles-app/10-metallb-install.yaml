@@ -10,8 +10,8 @@ spec:
     namespace: metallb-system
   source:
     repoURL: https://github.com/metallb/metallb.git
-    targetRevision: v0.13.7
-    path: manifests
+    targetRevision: v0.15.2
+    path: config/manifests
   syncPolicy:
     automated:
       prune: true
