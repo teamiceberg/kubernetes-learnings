@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: welcome-html
+  namespace: nginx-app
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Welcome</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; text-align: center; margin-top: 50px;">
+      <h1>Welcome to Shiva's NGINX Service</h1>
+      <p>This page is being served from Kubernetes via MetalLB.</p>
+    </body>
+    </html>
