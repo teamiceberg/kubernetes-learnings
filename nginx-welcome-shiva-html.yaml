@@ -12,6 +12,6 @@ data:
     </head>
     <body style="font-family: Arial, sans-serif; text-align: center; margin-top: 50px;">
       <h1>Welcome to Shiva's NGINX Service</h1>
-      <p>This page is being served from Kubernetes via MetalLB.</p>
+      <p>This page is being served from multipass Kubernetes on Apple M1 silicon via MetalLB load balancer.</p>
     </body>
     </html>
