@@ -1,36 +1,46 @@
-# 01-deploy.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nginx-app
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: lb-test
-  namespace: default
+  name: nginx
+  namespace: nginx-app
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: lb-test
+      app: nginx
   template:
     metadata:
       labels:
-        app: lb-test
+        app: nginx
     spec:
       containers:
         - name: nginx
           image: nginx:alpine
           ports:
             - containerPort: 80
----
-# 02-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: lb-test
-  namespace: default
-spec:
-  type: LoadBalancer
-  selector:
-    app: lb-test
-  ports:
-    - name: http-alt
-      port: 8080       # External port clients connect to
-      targetPort: 80   # Internal port on the Pod (NGINX)
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
