@@ -1,0 +1,23 @@
+# 10-metallb-install.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb
+  namespace: argocd
+  annotations:
+  argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: mutipass-vms-on-apple-m1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
+  source:
+    repoURL: https://github.com/metallb/metallb.git
+    targetRevision: v0.15.2
+    path: config/manifests
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
