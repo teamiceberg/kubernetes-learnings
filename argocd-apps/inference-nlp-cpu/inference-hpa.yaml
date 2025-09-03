@@ -9,7 +9,7 @@ spec:
     kind: Deployment
     name: cpu-infer
   minReplicas: 2
-  maxReplicas: 10
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
