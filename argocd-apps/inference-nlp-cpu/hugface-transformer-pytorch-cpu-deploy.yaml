@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: hf-transformers-cpu
-          image: ghcr.io/huggingface/transformers-pytorch-cpu
+          image: huggingface/transformers-pytorch-cpu
           ports:
             - containerPort: 8080
           resources:
