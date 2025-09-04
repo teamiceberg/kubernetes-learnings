@@ -8,23 +8,23 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cpu-infer
+  name: sentianal-cpu-infer
   namespace: cpu-inference
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: nlp-cpu-infer
+      app: sentianal-cpu-infer-app
   template:
     metadata:
       labels:
-        app: nlp-cpu-infer
+        app: sentianal-cpu-infer-app
     spec:
       containers:
-        - name: hf-transformers-cpu
-          image: huggingface/transformers-pytorch-cpu
+        - name: my-sentianalysis-infer-cpu
+          image: shivastanford/my-sentianal-cpu-infer:arm64
           ports:
-            - containerPort: 8080
+            - containerPort: 5080
           resources:
             requests:
               cpu: "500m"

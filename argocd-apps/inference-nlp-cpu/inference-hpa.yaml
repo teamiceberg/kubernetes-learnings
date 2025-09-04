@@ -1,13 +1,13 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: cpu-infer-hpa
+  name: sentianal-cpu-infer-hpa
   namespace: cpu-inference
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: cpu-infer
+    name: sentianal-cpu-infer
   minReplicas: 2
   maxReplicas: 3
   metrics:
