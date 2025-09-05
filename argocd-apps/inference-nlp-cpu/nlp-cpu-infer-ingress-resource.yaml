@@ -16,4 +16,4 @@ spec:
               service:
                 name: nlp-cpu-infer-svc
                 port:
-                  number: 5080
+                  number: 80
