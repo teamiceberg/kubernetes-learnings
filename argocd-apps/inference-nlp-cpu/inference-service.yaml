@@ -5,9 +5,9 @@ metadata:
   namespace: cpu-inference
 spec:
   selector:
-    app: nlp-cpu-infer
+    app: sentianal-cpu-infer-app
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 8080
+      targetPort: 5080
   type: ClusterIP
