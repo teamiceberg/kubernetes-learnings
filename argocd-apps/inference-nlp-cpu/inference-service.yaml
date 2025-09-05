@@ -10,4 +10,4 @@ spec:
     - protocol: TCP
       port: 5080
       targetPort: 5080
-  type: ClusterIP
+  type: LoadBalancer
