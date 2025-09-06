@@ -2,5 +2,5 @@ argo-cd/
 .vscode/
 .DS_Store
 *helmflatchart.yaml
-*[not-used].*
+scratchfiles/
 *.json
