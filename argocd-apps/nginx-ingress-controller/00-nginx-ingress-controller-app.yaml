@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nginx-ingress-controller-app
+  name: nginx-helm-managed-app
   namespace: argocd
 spec:
   project: multipass-vms-on-apple-m1
@@ -17,7 +17,7 @@ spec:
           value: "3"
         - name: controller.metrics.enabled
           value: "true"
-        - name: controller.nodeSelector."node-role\.kubernetes\.io/control-plane"
+        - name: controller.nodeSelector.node-role.kubernetes.io/control-plane
           value: "true"
         - name: controller.tolerations[0].key
           value: "node-role.kubernetes.io/control-plane"
