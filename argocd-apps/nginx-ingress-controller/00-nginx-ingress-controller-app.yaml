@@ -6,9 +6,9 @@ metadata:
 spec:
   project: multipass-vms-on-apple-m1
   source:
-    repoURL: https://kubernetes.github.io/ingress-nginx
-    chart: ingress-nginx
-    targetRevision: 4.13.2
+    repoURL: https://github.com/teamiceberg/multipass-k8s-vms-on-apple-m1.git
+    path: mycharts/ingress-nginx
+    targetRevision: nginx-metallb-dynamic
     helm:
       valueFiles:
         - nginx-values.yaml
