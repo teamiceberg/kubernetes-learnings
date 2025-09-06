@@ -18,7 +18,7 @@ spec:
         - name: controller.metrics.enabled
           value: "true"
         - name: controller.nodeSelector."node-role\.kubernetes\.io/control-plane"
-          value: ""
+          value: "true"
         - name: controller.tolerations[0].key
           value: "node-role.kubernetes.io/control-plane"
         - name: controller.tolerations[0].operator
