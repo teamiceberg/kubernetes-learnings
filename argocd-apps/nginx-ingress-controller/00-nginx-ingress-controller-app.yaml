@@ -10,21 +10,8 @@ spec:
     chart: ingress-nginx
     targetRevision: 4.13.2
     helm:
-      parameters:
-        - name: controller.service.type
-          value: LoadBalancer
-        - name: controller.replicaCount
-          value: "3"
-        - name: controller.metrics.enabled
-          value: "true"
-        - name: controller.nodeSelector.node-role.kubernetes.io/control-plane
-          value: "true"
-        - name: controller.tolerations[0].key
-          value: "node-role.kubernetes.io/control-plane"
-        - name: controller.tolerations[0].operator
-          value: "Exists"
-        - name: controller.tolerations[0].effect
-          value: "NoSchedule"
+      valueFiles:
+        - nginx-values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: ingress-nginx
