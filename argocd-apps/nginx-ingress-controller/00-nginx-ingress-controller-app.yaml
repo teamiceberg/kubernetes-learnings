@@ -10,6 +10,7 @@ spec:
     chart: ingress-nginx
     targetRevision: 4.13.2
     helm:
+      path: argocd-apps/nginx-ingress-controller
       valueFiles:
         - nginx-values.yaml
   destination:
