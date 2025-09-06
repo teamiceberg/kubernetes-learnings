@@ -1,7 +1,7 @@
 # Global defaults applied to all Argo CD components
 global:
   nodeSelector:
-    node-role.kubernetes.io/control-plane: ""
+    node-role.kubernetes.io/control-plane: "true"
   tolerations:
     - key: "node-role.kubernetes.io/control-plane"
       operator: "Exists"
@@ -19,7 +19,7 @@ server:
     servicePortHttps: 443
   extraArgs: []
   nodeSelector:
-    node-role.kubernetes.io/control-plane: ""
+    node-role.kubernetes.io/control-plane: "true"
   tolerations:
     - key: "node-role.kubernetes.io/control-plane"
       operator: "Exists"
@@ -29,7 +29,7 @@ server:
 repoServer:
   replicas: 1
   nodeSelector:
-    node-role.kubernetes.io/control-plane: ""
+    node-role.kubernetes.io/control-plane: "true"
   tolerations:
     - key: "node-role.kubernetes.io/control-plane"
       operator: "Exists"
@@ -39,7 +39,7 @@ repoServer:
 controller:
   replicas: 1
   nodeSelector:
-    node-role.kubernetes.io/control-plane: ""
+    node-role.kubernetes.io/control-plane: "true"
   tolerations:
     - key: "node-role.kubernetes.io/control-plane"
       operator: "Exists"
