@@ -11,4 +11,3 @@ spec:
     - protocol: TCP
       port: 5080 # External port on the LB IP
       targetPort: 5080  # Internal port in the Pod
-  
