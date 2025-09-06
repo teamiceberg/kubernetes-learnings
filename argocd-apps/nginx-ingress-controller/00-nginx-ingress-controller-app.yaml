@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nginx-ingress-app
+  name: nginx-ingress-controller-app
   namespace: argocd
 spec:
   project: multipass-vms-on-apple-m1
