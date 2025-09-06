@@ -12,7 +12,6 @@ spec:
     helm:
       valueFiles:
         - nginx-values.yaml
-    path: argocd-apps/nginx-ingress-controller
   destination:
     server: https://kubernetes.default.svc
     namespace: ingress-nginx
