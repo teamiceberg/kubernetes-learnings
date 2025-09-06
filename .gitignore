@@ -3,3 +3,4 @@ argo-cd/
 .DS_Store
 *helmflatchart.yaml
 *[not-used].*
+*.json
